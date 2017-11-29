@@ -15,7 +15,7 @@ from flask_migrate import Migrate, MigrateCommand
 from flask_mail import Mail, Message
 from threading import Thread
 from werkzeug import secure_filename
-from werkzeug.security import _password_hash, check_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # Imports for login management
 from flask_login import LoginManager, login_required, logout_user, login_user, UserMixin, current_user
