@@ -25,6 +25,8 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 # Application configurations
 app = Flask(__name__)
+app.debug = True
+app.use_reloader = True
 app.static_folder = 'static'
 app.config['SECRET_KEY'] = 'hardtoguessstring'
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get('DATABASE_URL') or "postgresql://localhost/songs_and_playlists"  # TODO: decide what your new database name will be, and create it in postgresql, before running this new application
@@ -189,10 +191,8 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Log In')
 
 class PlaylistCreateForm(FlaskForm):
-    songs = Song.query.all()
-    song_titles_val_descr = [(s.title,s.title) for s in songs]
     name = StringField('Playlist Name',validators=[Required()])
-    song_picks = SelectMultipleField('Songs to include',choices=song_titles_val_descr)
+    song_picks = SelectMultipleField('Songs to include')
     submit = SubmitField("Create Playlist")
 
 
@@ -368,11 +368,12 @@ def playlist(id):
 @login_required
 def create_playlist():
     form = PlaylistCreateForm()
+    songs = Song.query.all()
+    form.song_picks.choices = [(song.id, song.title) for song in songs]
     if form.validate_on_submit():
-        song_titles = form.song_picks.data # list?
-        song_objects = [get_song_by_name(name) for name in song_titles] # list of Song objects from queries??
-        # import code; code.interact(local=dict(globals(), **locals()))
-        get_or_create_playlist(db.session,current_user=current_user,name=form.name.data,song_list=song_objects) # How to access user, here and elsewhere TODO
+        song_titles = form.song_picks.data
+        song_objects = [get_song_by_name(name) for name in song_titles] # list of Song objects from queries
+        get_or_create_playlist(db.session,current_user=current_user,name=form.name.data,song_list=song_objects)
         return redirect(url_for('playlists'))
     return render_template('create_playlist.html',form=form)
 
